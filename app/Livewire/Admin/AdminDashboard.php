@@ -19,20 +19,18 @@ class AdminDashboard extends Component
     public $pendingReturns;
     public $recentOrders;
     public $salesData;
+    public $selectedOrder = null;
 
     public function mount()
     {
-        // KPIs
         $this->dailyOrders = Order::whereDate('created_at', Carbon::today())->count();
         $this->dailyRevenue = Order::whereDate('created_at', Carbon::today())->sum('total');
         $this->totalUsers = User::where('role', 'customer')->count();
         $this->totalProducts = Product::count();
         $this->pendingReturns = ReturnRequest::where('status', 'pending')->count();
 
-        // Recent Orders
         $this->recentOrders = Order::with('user')->latest()->take(5)->get();
 
-        // Sales data for chart (last 7 days)
         $this->salesData = Order::select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('SUM(total) as total')
@@ -46,6 +44,16 @@ class AdminDashboard extends Component
                 'total' => $item->total,
             ])
             ->toArray();
+    }
+
+    public function showOrder($orderId)
+    {
+        $this->selectedOrder = Order::with(['user', 'items.product'])->find($orderId);
+    }
+
+    public function closeModal()
+    {
+        $this->selectedOrder = null;
     }
 
     public function render()

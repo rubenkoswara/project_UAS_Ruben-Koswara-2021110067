@@ -17,23 +17,18 @@ class ReportManagement extends Component
     public $filterType = 'monthly';
     public $startDate;
     public $endDate;
-
     public $selectedDate;
     public $selectedWeek;
     public $selectedMonth;
     public $selectedYear;
-
     public $chartLabels = [];
     public $chartIncome = [];
     public $chartOrderCount = [];
-
     public $totalRevenue = 0;
     public $totalOrders = 0;
     public $avgOrderValue = 0;
-
     public $perPage = 12;
     protected $paginationTheme = 'tailwind';
-
     public $showDetailModal = false;
     public $selectedOrder = null;
 
@@ -41,21 +36,16 @@ class ReportManagement extends Component
     {
         $this->endDate = Carbon::today()->toDateString();
         $this->startDate = Carbon::today()->subDays(29)->toDateString();
-
         $this->selectedDate = Carbon::today()->toDateString();
         $this->selectedWeek = Carbon::today()->format('Y-\WW');
         $this->selectedMonth = Carbon::today()->format('Y-m');
         $this->selectedYear = Carbon::today()->format('Y');
-
         $this->generateReport();
     }
 
     protected function clean($value)
     {
-        if ($value === null) {
-            return '';
-        }
-
+        if ($value === null) return '';
         return preg_replace('/[^\x20-\x7E]/', '', (string) $value);
     }
 
@@ -93,15 +83,7 @@ class ReportManagement extends Component
 
     public function updated($property)
     {
-        if (in_array($property, [
-            'filterType',
-            'selectedDate',
-            'selectedWeek',
-            'selectedMonth',
-            'selectedYear',
-            'startDate',
-            'endDate'
-        ])) {
+        if (in_array($property, ['filterType', 'selectedDate', 'selectedWeek', 'selectedMonth', 'selectedYear', 'startDate', 'endDate'])) {
             $this->applyFilter();
         }
     }
@@ -117,11 +99,9 @@ class ReportManagement extends Component
             ->map(function ($o) {
                 $o->status = $this->clean($o->status);
                 $o->total = (float) $o->total;
-
                 if ($o->user) {
                     $o->user->name = $this->clean($o->user->name);
                 }
-
                 return $o;
             });
 
@@ -194,12 +174,9 @@ class ReportManagement extends Component
         $this->chartLabels = array_values(array_map([$this, 'clean'], $labels));
         $this->chartIncome = array_map('floatval', array_values($income));
         $this->chartOrderCount = array_map('intval', array_values($count));
-
         $this->totalRevenue = (float) $orders->sum('total');
         $this->totalOrders = (int) $orders->count();
-        $this->avgOrderValue = $this->totalOrders
-            ? (float) ($this->totalRevenue / $this->totalOrders)
-            : 0;
+        $this->avgOrderValue = $this->totalOrders ? (float) ($this->totalRevenue / $this->totalOrders) : 0;
     }
 
     public function exportCsv()
@@ -210,10 +187,7 @@ class ReportManagement extends Component
         $callback = function () use ($start, $end) {
             $out = fopen('php://output', 'w');
             fputcsv($out, ['ID', 'User', 'Total', 'Status', 'Created At']);
-
-            Order::with('user')
-                ->whereBetween('created_at', [$start, $end])
-                ->orderByDesc('created_at')
+            Order::with('user')->whereBetween('created_at', [$start, $end])->orderByDesc('created_at')
                 ->each(function ($o) use ($out) {
                     fputcsv($out, [
                         $o->id,
@@ -223,7 +197,6 @@ class ReportManagement extends Component
                         $o->created_at->format('Y-m-d H:i:s')
                     ]);
                 });
-
             fclose($out);
         };
 
@@ -236,20 +209,14 @@ class ReportManagement extends Component
     public function exportPdf()
     {
         [$start, $end] = $this->getDateRange();
-
-        $orders = Order::with('user')
-            ->whereBetween('created_at', [$start, $end])
-            ->orderByDesc('created_at')
-            ->get()
+        $orders = Order::with('user')->whereBetween('created_at', [$start, $end])->orderByDesc('created_at')->get()
             ->map(function ($o) {
                 $o->status = $this->clean($o->status);
-                if ($o->user) {
-                    $o->user->name = $this->clean($o->user->name);
-                }
+                if ($o->user) $o->user->name = $this->clean($o->user->name);
                 return $o;
             });
 
-        return Pdf::loadView('livewire.admin.reports.pdf', [
+        $pdf = Pdf::loadView('livewire.admin.reports.pdf', [
             'orders' => $orders,
             'chartLabels' => $this->chartLabels,
             'chartIncome' => $this->chartIncome,
@@ -259,17 +226,19 @@ class ReportManagement extends Component
             'avgOrderValue' => (float) $this->avgOrderValue,
             'startDate' => $start->toDateString(),
             'endDate' => $end->toDateString()
-        ])->download('sales-report-' . now()->format('Ymd_His') . '.pdf');
+        ]);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'sales-report-' . now()->format('Ymd_His') . '.pdf');
     }
 
     public function openDetailModal($id)
     {
         $this->selectedOrder = Order::with('user', 'orderItems.product')->findOrFail($id);
-
         if ($this->selectedOrder->user) {
             $this->selectedOrder->user->name = $this->clean($this->selectedOrder->user->name);
         }
-
         $this->showDetailModal = true;
     }
 
@@ -282,12 +251,8 @@ class ReportManagement extends Component
     public function render()
     {
         [$start, $end] = $this->getDateRange();
-
         return view('livewire.admin.report-management', [
-            'orders' => Order::with('user')
-                ->whereBetween('created_at', [$start, $end])
-                ->orderByDesc('created_at')
-                ->paginate($this->perPage)
+            'orders' => Order::with('user')->whereBetween('created_at', [$start, $end])->orderByDesc('created_at')->paginate($this->perPage)
         ])->layout('layouts.app');
     }
 }

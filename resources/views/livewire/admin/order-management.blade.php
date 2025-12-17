@@ -1,22 +1,34 @@
-<div class="p-6">
+<div class="p-8 bg-gray-50 min-h-screen text-left">
+    <style>
+        @keyframes modalEntry {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal { animation: modalEntry 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Manajemen Pesanan</h1>
-        <p class="text-sm text-gray-500 mt-1">Kelola semua pesanan, status, dan detail pengiriman di sini.</p>
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 tracking-tight uppercase">Manajemen <span class="text-indigo-600">Pesanan</span></h1>
+            <p class="text-gray-600 text-base font-medium mt-2">Panel kontrol transaksi, pengiriman, dan verifikasi bukti pelanggan.</p>
+        </div>
     </div>
 
     @if(session()->has('message'))
-        <div class="bg-green-100 text-green-800 border border-green-300 p-3 rounded-lg mb-4 shadow-sm">
-            {{ session('message') }}
+        <div class="mb-6 p-5 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-900 rounded-r-2xl flex items-center gap-3 shadow-sm">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-sm font-bold uppercase tracking-widest">{{ session('message') }}</span>
         </div>
     @endif
 
-    {{-- FILTER --}}
-    <div class="bg-white p-4 rounded-xl shadow mb-6 border border-gray-200">
-        <div class="flex flex-wrap gap-4 items-center">
-            <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Status</label>
-                <select wire:model="searchStatus" class="border border-gray-300 p-2 rounded-lg shadow-sm bg-white">
+    <div class="bg-white p-6 rounded-[2.5rem] border border-gray-200 shadow-sm mb-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:flex items-end gap-6">
+            <div class="flex-1 text-left">
+                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Filter Status</label>
+                <select wire:model.live="searchStatus" class="w-full bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-indigo-500 rounded-2xl px-6 py-4 text-sm font-bold text-gray-800 appearance-none transition-all cursor-pointer">
                     <option value="">Semua Status</option>
                     <option value="pending">Pending</option>
                     <option value="processing">Diproses</option>
@@ -25,216 +37,223 @@
                     <option value="canceled">Dibatalkan</option>
                 </select>
             </div>
-
-            <div>
-                <label class="block mb-1 text-sm font-medium text-gray-700">Tanggal</label>
-                <input type="date" wire:model="searchDate" class="border border-gray-300 p-2 rounded-lg shadow-sm bg-white">
+            <div class="flex-1 text-left">
+                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Filter Tanggal</label>
+                <input type="date" wire:model.live="searchDate" class="w-full bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-indigo-500 rounded-2xl px-6 py-4 text-sm font-bold text-gray-800 transition-all">
             </div>
+            <button wire:click="$set('searchStatus', ''), $set('searchDate', '')" class="h-[58px] px-8 bg-gray-100 hover:bg-red-50 text-gray-500 hover:text-red-600 rounded-2xl transition-all font-black text-xs uppercase tracking-widest">
+                Reset Filter
+            </button>
         </div>
     </div>
 
-    {{-- TABLE --}}
-    <div class="bg-white border rounded-xl shadow overflow-hidden">
-        <table class="min-w-full">
-            <thead class="bg-gray-100 border-b">
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
-                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-200">
-                @foreach($orders as $order)
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-4 py-3 text-sm text-gray-800">{{ $order->id }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-800">{{ $order->user->name }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-800">Rp {{ number_format($order->total,0,',','.') }}</td>
-
-                    <td class="px-4 py-3 capitalize">
-                        @php
-                            $colors = [
-                                'pending' => 'bg-yellow-100 text-yellow-700',
-                                'processing' => 'bg-blue-100 text-blue-700',
-                                'dikirim' => 'bg-indigo-100 text-indigo-700',
-                                'completed' => 'bg-green-100 text-green-700',
-                                'canceled' => 'bg-red-100 text-red-700',
-                            ];
-                        @endphp
-                        <span class="px-3 py-1 rounded-lg text-sm font-medium {{ $colors[$order->status] ?? 'bg-gray-100 text-gray-700' }}">
-                            {{ $order->status }}
-                        </span>
-                    </td>
-
-                    <td class="px-4 py-3 text-sm text-gray-800">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-
-                    <td class="px-4 py-3 text-center">
-                        <button wire:click="selectOrder({{ $order->id }})"
-                                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow text-xs">
-                            Detail & Update
-                        </button>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <div class="p-4">
-            {{ $orders->links() }}
-        </div>
-    </div>
-
-    {{-- MODAL --}}
-    @if($showDetailModal && $selectedOrder)
-    @php
-        $shippingInfo = $selectedOrder->shipping_info ? json_decode($selectedOrder->shipping_info, true) : [];
-    @endphp
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-4xl p-8 overflow-y-auto max-h-[90vh] shadow-2xl relative">
-            <button wire:click="closeDetailModal" class="absolute top-5 right-5 text-gray-400 hover:text-gray-700 text-3xl">&times;</button>
-            
-            <h2 class="text-3xl font-bold mb-6 text-gray-800">Detail Pesanan #{{ $selectedOrder->id }}</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-6">
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-2 border-b pb-2">Informasi Customer</h3>
-                    <p><span class="font-semibold">Nama:</span> {{ $selectedOrder->user->name ?? '-' }}</p>
-                    <p><span class="font-semibold">Email:</span> {{ $selectedOrder->user->email ?? '-' }}</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-2 border-b pb-2">Informasi Pesanan</h3>
-                    <p><span class="font-semibold">Tanggal:</span> {{ $selectedOrder->created_at->format('d M Y, H:i') }}</p>
-                    <p><span class="font-semibold">Status:</span> 
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold 
-                            @if($selectedOrder->status === 'completed') bg-emerald-100 text-emerald-700
-                            @elseif(in_array($selectedOrder->status, ['pending','created'])) bg-yellow-100 text-yellow-700
-                            @else bg-slate-200 text-slate-700 @endif">
-                            {{ ucfirst($selectedOrder->status) }}
-                        </span>
-                    </p>
-                    <p><span class="font-semibold">Metode Pembayaran:</span> {{ $selectedOrder->payment_method ?? '-' }}</p>
-
-
-                </div>
-                <div class="md:col-span-2">
-                    <h3 class="font-semibold text-gray-700 mb-2 border-b pb-2">Informasi Pengiriman</h3>
-                    @if(!empty($shippingInfo))
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                            <p><span class="font-semibold">Alamat:</span> {{ $shippingInfo['alamat'] ?? '-' }}</p>
-                            <p><span class="font-semibold">Kota:</span> {{ $shippingInfo['kota'] ?? '-' }}</p>
-                            <p><span class="font-semibold">Kecamatan:</span> {{ $shippingInfo['kecamatan'] ?? '-' }}</p>
-                            <p><span class="font-semibold">Kelurahan:</span> {{ $shippingInfo['kelurahan'] ?? '-' }}</p>
-                            <p><span class="font-semibold">No. Telepon:</span> {{ $shippingInfo['no_telp'] ?? '-' }}</p>
-                            <p><span class="font-semibold">Kurir:</span> {{ $shippingInfo['shipping'] ?? '-' }}</p>
-                            <div class="sm:col-span-2"><span class="font-semibold">Catatan:</span> {{ $shippingInfo['note'] ?? '-' }}</div>
-                        </div>
-                    @else
-                        <p class="text-gray-500 text-sm">Tidak ada informasi pengiriman.</p>
-                    @endif
-                </div>
-            </div>
-
-            <h3 class="font-semibold text-gray-700 mb-3 border-b pb-2">Item Pesanan</h3>
-            <div class="overflow-x-auto mb-6">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50">
+    <div class="bg-white rounded-[2.5rem] border border-gray-200 shadow-md overflow-hidden">
+        <div class="overflow-x-auto p-6">
+            <table class="w-full text-left border-separate border-spacing-y-4">
+                <thead>
+                    <tr class="text-gray-500 text-xs font-black uppercase tracking-widest">
+                        <th class="px-6 py-2">ID & Customer</th>
+                        <th class="px-6 py-2">Total Transaksi</th>
+                        <th class="px-6 py-2 text-center">Status</th>
+                        <th class="px-6 py-2 text-center">Waktu</th>
+                        <th class="px-6 py-2 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    @forelse($orders as $order)
+                        <tr class="group transition-all duration-200">
+                            <td class="px-6 py-5 bg-gray-50 group-hover:bg-indigo-50/50 rounded-l-[1.5rem]">
+                                <span class="text-indigo-600 font-black text-xs block mb-1">#ORD-{{ $order->id }}</span>
+                                <span class="text-gray-900 font-extrabold text-base uppercase tracking-tight">{{ $order->user->name }}</span>
+                            </td>
+                            <td class="px-6 py-5 bg-gray-50 group-hover:bg-indigo-50/50">
+                                <span class="text-gray-900 font-black text-base">Rp {{ number_format($order->total,0,',','.') }}</span>
+                            </td>
+                            <td class="px-6 py-5 bg-gray-50 group-hover:bg-indigo-50/50 text-center">
+                                @php
+                                    $statusClasses = [
+                                        'pending' => 'bg-amber-100 text-amber-800 border-amber-300',
+                                        'processing' => 'bg-blue-100 text-blue-800 border-blue-300',
+                                        'dikirim' => 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                                        'completed' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                                        'canceled' => 'bg-rose-100 text-rose-800 border-rose-300',
+                                    ];
+                                @endphp
+                                <span class="px-4 py-2 border rounded-full text-[10px] font-black uppercase tracking-wider {{ $statusClasses[$order->status] ?? 'bg-gray-100 text-gray-700' }}">
+                                    {{ $order->status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 bg-gray-50 group-hover:bg-indigo-50/50 text-center">
+                                <div class="text-gray-900 font-bold text-sm">{{ $order->created_at->format('d M Y') }}</div>
+                                <div class="text-gray-500 text-[10px] font-black uppercase">{{ $order->created_at->format('H:i') }} WIB</div>
+                            </td>
+                            <td class="px-6 py-5 bg-gray-50 group-hover:bg-indigo-50/50 rounded-r-[1.5rem] text-center">
+                                <button wire:click="selectOrder({{ $order->id }})" class="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all active:scale-95 font-black text-[10px] uppercase tracking-widest">
+                                    Detail
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
                         <tr>
-                            <th class="p-3 font-semibold">Produk</th>
-                            <th class="p-3 font-semibold text-center">Jumlah</th>
-                            <th class="p-3 font-semibold text-right">Harga</th>
-                            <th class="p-3 font-semibold text-right">Subtotal</th>
+                            <td colspan="5" class="text-center py-24 bg-gray-50 rounded-[2rem] text-gray-400 font-black uppercase text-sm italic">
+                                Belum ada pesanan masuk
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($selectedOrder->orderItems as $item)
-                        <tr class="border-b">
-                            <td class="p-3">{{ $item->product->name ?? 'Produk Dihapus' }}</td>
-                            <td class="p-3 text-center">{{ $item->quantity }}</td>
-                            <td class="p-3 text-right">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                            <td class="p-3 text-right">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="p-8 border-t border-gray-100 bg-gray-50/50">{{ $orders->links() }}</div>
+    </div>
+
+    @if($showDetailModal && $selectedOrder)
+    @php $shippingInfo = json_decode($selectedOrder->shipping_info, true) ?? []; @endphp
+    <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex justify-center items-center z-[100] p-4 text-left">
+        <div class="bg-white w-full max-w-7xl rounded-[3rem] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-modal border border-gray-100">
             
-            <div class="flex justify-end items-center mb-6">
-                <div class="text-right">
-                    <p class="text-gray-600">Subtotal: <span class="font-semibold">Rp {{ number_format($selectedOrder->orderItems->sum(fn($i) => $i->price * $i->quantity), 0, ',', '.') }}</span></p>
-                    <p class="text-gray-600">Ongkir: <span class="font-semibold">Rp {{ number_format($shippingInfo['shipping_cost'] ?? 0, 0, ',', '.') }}</span></p>
-                    <p class="text-xl font-bold text-gray-800 mt-2">Total: <span class="text-indigo-600">Rp {{ number_format($selectedOrder->total, 0, ',', '.') }}</span></p>
+            <div class="p-8 border-b border-gray-100 flex justify-between items-center bg-white">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900 uppercase">Informasi <span class="text-indigo-600">Lengkap</span></h2>
+                    <p class="text-xs font-black text-gray-400 mt-1 uppercase tracking-widest">Transaction ID: #ORD-{{ $selectedOrder->id }} | {{ $selectedOrder->created_at->format('d M Y H:i') }}</p>
                 </div>
+                <button wire:click="closeDetailModal" class="p-4 bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
 
-            <h3 class="font-semibold text-gray-700 mb-3 border-b pb-2">Bukti Pendukung</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div>
-                    <h4 class="font-semibold text-sm mb-2">Bukti Pembayaran</h4>
-                    @if($selectedOrder->payment_proof)
-                        @php
-                            $ext = strtolower(pathinfo($selectedOrder->payment_proof, PATHINFO_EXTENSION));
-                            $isImg = in_array($ext, ['jpg','jpeg','png']);
-                        @endphp
-                        @if($isImg)
-                            <a href="{{ asset('storage/'.$selectedOrder->payment_proof) }}" target="_blank">
-                                <img src="{{ asset('storage/'.$selectedOrder->payment_proof) }}" alt="Bukti Pembayaran" class="w-full rounded-lg border object-contain max-h-64 shadow-sm hover:shadow-lg transition">
-                            </a>
-                        @else
-                            <a href="{{ asset('storage/'.$selectedOrder->payment_proof) }}" target="_blank" class="text-blue-600 hover:underline">Lihat PDF</a>
-                        @endif
-                    @else
-                        <p class="text-gray-500 text-sm p-4 bg-gray-50 rounded-lg">Tidak ada</p>
-                    @endif
-                </div>
-                <div>
-                    <h4 class="font-semibold text-sm mb-2">Resi Pengiriman</h4>
-                    @if($selectedOrder->receipt)
-                        <a href="{{ asset('storage/'.$selectedOrder->receipt) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $selectedOrder->receipt) }}" alt="Resi" class="w-full rounded-lg border object-contain max-h-64 shadow-sm hover:shadow-lg transition">
-                        </a>
-                    @else
-                        <p class="text-gray-500 text-sm p-4 bg-gray-50 rounded-lg">Tidak ada</p>
-                    @endif
-                </div>
-                <div>
-                    <h4 class="font-semibold text-sm mb-2">Bukti Pengiriman</h4>
-                     @if($selectedOrder->delivery_proof)
-                        <a href="{{ asset('storage/'.$selectedOrder->delivery_proof) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $selectedOrder->delivery_proof) }}" alt="Bukti Pengiriman" class="w-full rounded-lg border object-contain max-h-64 shadow-sm hover:shadow-lg transition">
-                        </a>
-                    @else
-                        <p class="text-gray-500 text-sm p-4 bg-gray-50 rounded-lg">Tidak ada</p>
-                    @endif
-                </div>
-            </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar bg-gray-50/30 flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    
+                    <div class="lg:col-span-3 space-y-6">
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
+                            <h3 class="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                Alamat Pengiriman Lengkap
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nama Penerima</label>
+                                        <p class="text-xl font-black text-gray-900 uppercase tracking-tight">{{ $shippingInfo['nama_penerima'] ?? $selectedOrder->user->name }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nomor Telepon / WhatsApp</label>
+                                        <p class="text-lg font-black text-indigo-600">{{ $shippingInfo['no_telp'] ?? '-' }}</p>
+                                        <p class="text-xs font-bold text-gray-400">{{ $selectedOrder->user->email }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Kurir & Layanan</label>
+                                        <div class="flex items-center gap-3">
+                                            <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black uppercase border border-indigo-100 italic">{{ $shippingInfo['shipping'] ?? '-' }}</span>
+                                            <span class="text-[10px] font-bold text-gray-400 italic">{{ $shippingInfo['service'] ?? 'REGULER' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Alamat Lengkap</label>
+                                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                                            <p class="text-sm font-bold text-gray-800 leading-relaxed uppercase">{{ $shippingInfo['alamat'] ?? '-' }}</p>
+                                            <div class="mt-4 grid grid-cols-3 gap-4 border-t border-gray-200 pt-4">
+                                                <div>
+                                                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Kelurahan</label>
+                                                    <p class="text-xs font-black text-gray-900 uppercase">{{ $shippingInfo['kelurahan'] ?? '-' }}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Kecamatan</label>
+                                                    <p class="text-xs font-black text-gray-900 uppercase">{{ $shippingInfo['kecamatan'] ?? '-' }}</p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest">Kota/Kab</label>
+                                                    <p class="text-xs font-black text-gray-900 uppercase">{{ $shippingInfo['kota'] ?? '-' }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            {{-- STATUS --}}
-            <div class="mt-8 p-5 border rounded-2xl bg-gray-50 shadow-sm">
-                <h4 class="text-lg font-semibold text-gray-800 mb-2">Update Status</h4>
-                <select wire:model="newStatus"
-                    class="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-300">
-                    <option value="pending">Pending</option>
-                    <option value="processing">Diproses</option>
-                    <option value="dikirim">Dikirim</option>
-                    <option value="completed">Selesai</option>
-                    <option value="canceled">Dibatalkan</option>
-                </select>
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
+                            <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-6">Galeri Bukti & Lampiran</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-3">1. Bukti Pembayaran</label>
+                                    @if($selectedOrder->payment_proof)
+                                        <img src="{{ asset('storage/' . $selectedOrder->payment_proof) }}" class="w-full h-48 object-cover rounded-[2rem] border-4 border-white shadow-md cursor-pointer hover:scale-[1.02] transition" onclick="window.open(this.src)">
+                                    @else
+                                        <div class="w-full h-48 bg-gray-100 rounded-[2rem] flex items-center justify-center border-2 border-dashed text-gray-300 font-black text-[10px] uppercase">Belum Upload</div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-3">2. Foto Resi (Receipt)</label>
+                                    @if($selectedOrder->receipt)
+                                        <img src="{{ asset('storage/' . $selectedOrder->receipt) }}" class="w-full h-48 object-cover rounded-[2rem] border-4 border-white shadow-md cursor-pointer hover:scale-[1.02] transition" onclick="window.open(this.src)">
+                                    @else
+                                        <div class="w-full h-48 bg-gray-100 rounded-[2rem] flex items-center justify-center border-2 border-dashed text-gray-300 font-black text-[10px] uppercase">Belum Ada</div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-3">3. Bukti Pengiriman</label>
+                                    @if($selectedOrder->delivery_proof)
+                                        <img src="{{ asset('storage/' . $selectedOrder->delivery_proof) }}" class="w-full h-48 object-cover rounded-[2rem] border-4 border-white shadow-md cursor-pointer hover:scale-[1.02] transition" onclick="window.open(this.src)">
+                                    @else
+                                        <div class="w-full h-48 bg-gray-100 rounded-[2rem] flex items-center justify-center border-2 border-dashed text-gray-300 font-black text-[10px] uppercase">Belum Ada</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="mt-4">
-                    <label class="font-semibold block mb-1">Upload Resi (Opsional)</label>
-                    <input type="file" wire:model="resi" class="w-full border border-gray-300 p-2 rounded-lg">
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
+                            <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-6">Daftar Produk</h3>
+                            <div class="space-y-4">
+                                @foreach($selectedOrder->orderItems as $item)
+                                <div class="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
+                                    <p class="text-gray-900 font-extrabold text-base uppercase">{{ $item->product->name }} (x{{ $item->quantity }})</p>
+                                    <p class="text-gray-900 font-black text-lg text-right">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</p>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-indigo-700 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
+                            <h3 class="text-xs font-black opacity-60 uppercase tracking-widest mb-4">Ringkasan Biaya</h3>
+                            <p class="text-3xl font-black tracking-tighter">Rp {{ number_format($selectedOrder->total, 0, ',', '.') }}</p>
+                            <div class="mt-4 pt-4 border-t border-white/10 space-y-2">
+                                <p class="text-[10px] font-black uppercase tracking-widest">Metode Pembayaran</p>
+                                <p class="text-xs font-bold opacity-90 uppercase">{{ $selectedOrder->payment_method ?? 'TRANSFER MANUAL' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm space-y-6">
+                            <h3 class="text-xs font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                                <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span> Kendali Status
+                            </h3>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase block mb-2">Update Status</label>
+                                <select wire:model="newStatus" class="w-full bg-gray-50 border-0 rounded-xl p-4 text-sm font-black text-gray-800 uppercase">
+                                    <option value="pending">Pending</option>
+                                    <option value="processing">Diproses</option>
+                                    <option value="dikirim">Dikirim</option>
+                                    <option value="completed">Selesai</option>
+                                    <option value="canceled">Dibatalkan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-gray-400 uppercase block mb-2">Upload Resi</label>
+                                <input type="file" wire:model="resi" class="w-full text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-black">
+                            </div>
+                            <button wire:click="updateStatus" class="w-full py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95">
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
-
-            <div class="flex justify-end gap-2 mt-8">
-                <button wire:click="closeDetailModal" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-semibold transition">Batal</button>
-                <button wire:click="updateStatus" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition">Simpan</button>
             </div>
         </div>
     </div>
     @endif
-
 </div>

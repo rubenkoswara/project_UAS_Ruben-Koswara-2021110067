@@ -55,4 +55,3 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/order-returns', OrderReturnManagement::class)->name('order-returns');
     });
 
-
