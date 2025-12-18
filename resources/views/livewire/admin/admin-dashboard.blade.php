@@ -14,10 +14,36 @@
             <h1 class="text-4xl font-black text-gray-900 tracking-tight uppercase">Admin <span class="text-blue-600">Dashboard</span></h1>
             <p class="text-gray-500 text-sm font-medium mt-1">Selamat datang kembali, berikut ringkasan bisnis Anda hari ini.</p>
         </div>
+
         <div class="flex items-center gap-3">
-            <span class="px-4 py-2 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 shadow-sm">
-                {{ now()->format('d F Y') }}
-            </span>
+            <div class="bg-white/60 backdrop-blur-md border border-white px-5 py-3 rounded-[2rem] shadow-sm flex items-center gap-4 group hover:shadow-md transition-all duration-300">
+                <div class="bg-blue-600 text-white p-2.5 rounded-2xl shadow-lg shadow-blue-200 group-hover:scale-110 transition duration-300">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                
+                <div class="flex flex-col text-left">
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] leading-none mb-1">
+                        {{ now()->locale('id')->translatedFormat('l') }}
+                    </p>
+                    <p class="text-sm font-black text-gray-900 uppercase tracking-tight">
+                        {{ now()->locale('id')->translatedFormat('d F Y') }}
+                    </p>
+                </div>
+
+                <div class="ml-2 pl-4 border-l border-gray-100 hidden sm:block">
+                    <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                        </span>
+                        <p class="text-[11px] font-black text-gray-700 tabular-nums uppercase">
+                            {{ now()->format('H:i') }} <span class="text-gray-400 text-[9px]">WIB</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

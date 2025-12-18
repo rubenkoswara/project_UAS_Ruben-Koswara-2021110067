@@ -10,7 +10,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             
-            {{-- BAGIAN GAMBAR DENGAN FITUR ZOOM --}}
             <div class="relative group cursor-zoom-in" @click="openModal = true">
                 <div class="absolute -inset-1 bg-gradient-to-r from-blue-200 to-indigo-200 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                 <div class="relative bg-white p-3 rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
@@ -24,7 +23,6 @@
                 </div>
             </div>
 
-            {{-- DETAIL PRODUK --}}
             <div class="flex flex-col text-left space-y-8">
                 <div class="space-y-4">
                     <div class="flex flex-wrap items-center gap-3">
@@ -65,7 +63,6 @@
                     </div>
                 </div>
 
-                {{-- Quantity + Add to Cart --}}
                 @auth
                 <div class="flex flex-col gap-4 pt-4">
                     <div class="flex flex-wrap items-center gap-4">
@@ -87,7 +84,63 @@
             </div>
         </div>
 
-        {{-- MODAL ZOOM GAMBAR --}}
+        <div class="mt-24 border-t border-gray-100 pt-16">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                <div class="text-left">
+                    <h2 class="text-3xl font-black text-gray-900 uppercase tracking-tighter">Ulasan Pelanggan</h2>
+                    <p class="text-gray-400 text-sm font-medium mt-1 uppercase tracking-widest">Apa kata mereka tentang produk ini</p>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm self-start">
+                    <span class="text-3xl font-black text-blue-600">{{ number_format($product->reviews->avg('rating') ?: 0, 1) }}</span>
+                    <div class="flex flex-col">
+                        <div class="flex text-amber-400">
+                            @php $avg = $product->reviews->avg('rating') ?: 0; @endphp
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg class="w-4 h-4 {{ $i <= $avg ? 'fill-current' : 'text-gray-200 fill-current' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @endfor
+                        </div>
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">{{ $product->reviews->count() }} Review Terverifikasi</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @forelse($product->reviews as $review)
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300">
+                        <div class="text-left">
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-black text-xs border border-blue-100">
+                                        {{ strtoupper(substr($review->user->name, 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-black text-gray-900 uppercase leading-none">{{ $review->user->name }}</p>
+                                        <p class="text-[10px] text-gray-400 font-bold mt-1">{{ $review->created_at->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex text-amber-400">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <svg class="w-3 h-3 {{ $i <= $review->rating ? 'fill-current' : 'text-gray-100 fill-current' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                    @endfor
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-sm font-medium leading-relaxed italic">
+                                "{{ $review->comment }}"
+                            </p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-full py-16 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center">
+                        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-gray-300 mb-4 shadow-sm border border-gray-100">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                        <p class="text-gray-400 font-bold uppercase text-[10px] tracking-[0.2em]">Belum ada ulasan untuk produk ini</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
         <div x-show="openModal" 
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
@@ -96,7 +149,8 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/90 backdrop-blur-sm"
-             style="display: none;">
+             style="display: none;"
+             @keydown.escape.window="openModal = false">
             
             <div @click.away="openModal = false" class="relative max-w-4xl w-full">
                 <button @click="openModal = false" class="absolute -top-12 right-0 text-white hover:text-blue-400 flex items-center gap-2 font-black uppercase text-xs tracking-widest transition">

@@ -139,13 +139,12 @@
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nomor Telepon / WhatsApp</label>
                                         <p class="text-lg font-black text-indigo-600">{{ $shippingInfo['no_telp'] ?? '-' }}</p>
-                                        <p class="text-xs font-bold text-gray-400">{{ $selectedOrder->user->email }}</p>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Kurir & Layanan</label>
                                         <div class="flex items-center gap-3">
                                             <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black uppercase border border-indigo-100 italic">{{ $shippingInfo['shipping'] ?? '-' }}</span>
-                                            <span class="text-[10px] font-bold text-gray-400 italic">{{ $shippingInfo['service'] ?? 'REGULER' }}</span>
+                                            <span class="text-[10px] font-bold text-gray-400 italic">{{ $shippingInfo['service'] ?? '-' }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -206,20 +205,41 @@
 
                         <div class="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
                             <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-6">Daftar Produk</h3>
-                            <div class="space-y-4">
-                                @foreach($selectedOrder->orderItems as $item)
-                                <div class="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
-                                    <p class="text-gray-900 font-extrabold text-base uppercase">{{ $item->product->name }} (x{{ $item->quantity }})</p>
-                                    <p class="text-gray-900 font-black text-lg text-right">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</p>
-                                </div>
-                                @endforeach
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="border-b border-gray-100">
+                                            <th class="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Item Produk</th>
+                                            <th class="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Jumlah (Qty)</th>
+                                            <th class="pb-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-50">
+                                        @foreach($selectedOrder->orderItems as $item)
+                                        <tr>
+                                            <td class="py-5">
+                                                <p class="text-gray-900 font-extrabold text-sm uppercase tracking-tight">{{ $item->product->name }}</p>
+                                                <p class="text-[10px] text-gray-400 font-bold">Harga: Rp {{ number_format($item->price, 0, ',', '.') }}</p>
+                                            </td>
+                                            <td class="py-5 text-center">
+                                                <span class="inline-flex items-center justify-center bg-indigo-50 text-indigo-700 font-black text-xs w-10 h-10 rounded-xl border border-indigo-100">
+                                                    {{ $item->quantity }}
+                                                </span>
+                                            </td>
+                                            <td class="py-5 text-right">
+                                                <p class="text-gray-900 font-black text-base">Rp {{ number_format($item->price * $item->quantity, 0, ',', '.') }}</p>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
 
                     <div class="lg:col-span-1 space-y-6">
                         <div class="bg-indigo-700 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
-                            <h3 class="text-xs font-black opacity-60 uppercase tracking-widest mb-4">Ringkasan Biaya</h3>
+                            <h3 class="text-xs font-black opacity-60 uppercase tracking-widest mb-4">Total Bayar</h3>
                             <p class="text-3xl font-black tracking-tighter">Rp {{ number_format($selectedOrder->total, 0, ',', '.') }}</p>
                             <div class="mt-4 pt-4 border-t border-white/10 space-y-2">
                                 <p class="text-[10px] font-black uppercase tracking-widest">Metode Pembayaran</p>
@@ -233,7 +253,7 @@
                             </h3>
                             <div>
                                 <label class="text-[10px] font-black text-gray-400 uppercase block mb-2">Update Status</label>
-                                <select wire:model="newStatus" class="w-full bg-gray-50 border-0 rounded-xl p-4 text-sm font-black text-gray-800 uppercase">
+                                <select wire:model="newStatus" class="w-full bg-gray-50 border-0 rounded-xl p-4 text-sm font-black text-gray-800 uppercase focus:ring-2 focus:ring-indigo-500 transition-all">
                                     <option value="pending">Pending</option>
                                     <option value="processing">Diproses</option>
                                     <option value="dikirim">Dikirim</option>
@@ -255,5 +275,5 @@
             </div>
         </div>
     </div>
-    @endif
+@endif
 </div>

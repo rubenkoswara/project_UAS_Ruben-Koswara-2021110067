@@ -15,6 +15,7 @@ class CustomerOrders extends Component
 
     public $searchStatus = '';
     public $selectedOrder;
+    public $deliveryProof; 
     public $rating = [];
     public $comment = [];
     public $returnReason = [];
@@ -27,7 +28,7 @@ class CustomerOrders extends Component
 
     public function selectOrder($orderId)
     {
-        $this->selectedOrder = Order::with('orderItems.product', 'returns')->findOrFail($orderId);
+        $this->selectedOrder = Order::with(['orderItems.product', 'returns', 'shippingMethod', 'user'])->findOrFail($orderId);
         $this->resetInputs();
     }
 
@@ -43,16 +44,20 @@ class CustomerOrders extends Component
         $this->comment = [];
         $this->returnReason = [];
         $this->returnProof = [];
+        $this->deliveryProof = null;
     }
 
     public function submitReview($orderItemId)
     {
         $item = $this->selectedOrder->orderItems->firstWhere('id', $orderItemId);
-        if (!$item) return session()->flash('toast', 'Produk tidak ditemukan.');
+        
+        if (!$item) {
+            session()->flash('toast', 'Produk tidak ditemukan.');
+            return;
+        }
 
         Review::updateOrCreate(
             [
-                'order_id' => $this->selectedOrder->id,
                 'product_id' => $item->product->id,
                 'user_id' => auth()->id()
             ],
@@ -70,10 +75,20 @@ class CustomerOrders extends Component
     public function submitReturn($orderItemId)
     {
         $item = $this->selectedOrder->orderItems->firstWhere('id', $orderItemId);
-        if (!$item) return session()->flash('toast', 'Produk tidak ditemukan.');
-        if (empty($this->returnReason[$orderItemId])) return session()->flash('toast', 'Alasan retur tidak boleh kosong.');
+        
+        if (!$item) {
+            session()->flash('toast', 'Produk tidak ditemukan.');
+            return;
+        }
 
-        $path = isset($this->returnProof[$orderItemId]) ? $this->returnProof[$orderItemId]->store('return-proofs', 'public') : null;
+        if (empty($this->returnReason[$orderItemId])) {
+            session()->flash('toast', 'Alasan retur tidak boleh kosong.');
+            return;
+        }
+
+        $path = isset($this->returnProof[$orderItemId]) 
+            ? $this->returnProof[$orderItemId]->store('return-proofs', 'public') 
+            : null;
 
         ReturnRequest::create([
             'order_id' => $this->selectedOrder->id,
@@ -91,9 +106,20 @@ class CustomerOrders extends Component
 
     public function markAsReceived()
     {
+        $this->validate([
+            'deliveryProof' => 'required|image|max:2048',
+        ]);
+
         if ($this->selectedOrder && $this->selectedOrder->status === 'dikirim') {
-            $this->selectedOrder->update(['status' => 'completed']);
-            $this->selectedOrder = $this->selectedOrder->fresh();
+            $path = $this->deliveryProof->store('delivery-proofs', 'public');
+
+            $this->selectedOrder->update([
+                'status' => 'completed',
+                'delivery_proof' => $path
+            ]);
+
+            $this->selectedOrder = $this->selectedOrder->fresh(['orderItems.product', 'returns', 'shippingMethod', 'user']);
+            $this->deliveryProof = null;
             session()->flash('toast', 'Pesanan berhasil diterima.');
         }
     }
@@ -102,7 +128,7 @@ class CustomerOrders extends Component
     {
         $orders = Order::where('user_id', auth()->id())
             ->when($this->searchStatus, fn($q) => $q->where('status', $this->searchStatus))
-            ->with('orderItems.product', 'returns')
+            ->with(['orderItems.product', 'returns', 'shippingMethod', 'user'])
             ->latest()
             ->paginate(9);
 

@@ -17,6 +17,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Logo URL
+    |--------------------------------------------------------------------------
+    |
+    | This value is the URL for the application logo. If set, it will be used
+    | in place of the default logo in the navigation bars.
+    |
+    */
+    'logo_url' => env('APP_LOGO_URL', null),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -65,7 +76,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------
