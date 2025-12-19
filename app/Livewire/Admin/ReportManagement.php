@@ -177,6 +177,12 @@ class ReportManagement extends Component
         $this->totalRevenue = (float) $orders->sum('total');
         $this->totalOrders = (int) $orders->count();
         $this->avgOrderValue = $this->totalOrders ? (float) ($this->totalRevenue / $this->totalOrders) : 0;
+
+        $this->dispatch('reportUpdated', [
+            'labels' => $this->chartLabels,
+            'income' => $this->chartIncome,
+            'orderCount' => $this->chartOrderCount
+        ]);
     }
 
     public function exportCsv()

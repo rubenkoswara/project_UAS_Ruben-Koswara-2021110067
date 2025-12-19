@@ -1,10 +1,6 @@
-# Renesca Aquatic: Your Premier E-commerce Solution
-
-![Renesca Aquatic Logo Placeholder](https://via.placeholder.com/150/0000FF/FFFFFF?text=Renesca+Aquatic)
-
 ## Gambaran Umum Proyek
 
-Renesca Aquatic adalah platform e-commerce komprehensif yang dirancang untuk toko online modern. Sistem ini menyediakan pengalaman belanja yang mulus bagi pelanggan dan alat manajemen yang kuat bagi admin dan vendor. Dibangun di atas fondasi Laravel, dengan antarmuka dinamis menggunakan Livewire, Renesca Aquatic menawarkan skalabilitas, keamanan, dan kemudahan penggunaan.
+Renesca Aquatic adalah platform e-commerce komprehensif yang dirancang untuk toko online modern. Sistem ini menyediakan pengalaman belanja yang mulus bagi pelanggan dan alat manajemen yang kuat bagi admin. Dibangun di atas fondasi Laravel, dengan antarmuka dinamis menggunakan Livewire, Renesca Aquatic menawarkan skalabilitas, keamanan, dan kemudahan penggunaan.
 
 ## Fitur Utama
 
@@ -26,8 +22,6 @@ Renesca Aquatic adalah platform e-commerce komprehensif yang dirancang untuk tok
 *   **Manajemen Metode Pembayaran & Pengiriman:** Konfigurasi metode pembayaran dan pengiriman yang berbeda.
 *   **Laporan & Analisis:** Dapatkan wawasan tentang penjualan dan tren.
 *   **Trash Bin:** Fitur untuk mengelola item yang dihapus sementara sebelum penghapusan permanen.
-
-### Untuk Vendor:
 *   **Manajemen Produk:** Vendor dapat mengelola produk mereka sendiri (menambah, mengedit, menghapus).
 *   **Manajemen Pesanan Vendor:** Lihat dan kelola pesanan yang terkait dengan produk mereka.
 

@@ -284,5 +284,74 @@
             </div>
         </div>
     </div>
-    @endif
-</div>
+        @endif
+    </div>
+    
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:init', () => {
+            const ctx = document.getElementById('comboChart');
+            if (!ctx) return;
+    
+            let chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @json($chartLabels),
+                    datasets: [{
+                        type: 'line',
+                        label: 'Pendapatan',
+                        data: @json($chartIncome),
+                        borderColor: 'rgb(16,185,129)',
+                        backgroundColor: 'rgba(16,185,129,0.2)',
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                        fill: true,
+                    }, {
+                        type: 'bar',
+                        label: 'Pesanan',
+                        data: @json($chartOrderCount),
+                        backgroundColor: 'rgb(79, 70, 229)',
+                        borderColor: 'rgb(79, 70, 229)',
+                        yAxisID: 'y',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            type: 'linear',
+                            position: 'left',
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y1: {
+                            beginAtZero: true,
+                            type: 'linear',
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false, 
+                            },
+                        }
+                    }
+                }
+            });
+    
+            Livewire.on('reportUpdated', (event) => {
+                const newChartData = event[0];
+                if (chart && newChartData) {
+                    chart.data.labels = newChartData.labels;
+                    chart.data.datasets[0].data = newChartData.income;
+                    chart.data.datasets[1].data = newChartData.orderCount;
+                    chart.update();
+                }
+            });
+        });
+    </script>
+    @endpush
+    
